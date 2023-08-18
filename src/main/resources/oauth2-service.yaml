@@ -1,0 +1,7 @@
+port: 8089
+host: "localhost"
+uris:
+  generateTokenUri: "/oauth2/token/generate"
+  verifyTokenUri: "/oauth2/token/verify"
+  refreshTokenUri: "/oauth2/token/refresh"
+  revokeTokenUri: "/oauth2/token/revoke"

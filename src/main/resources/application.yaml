@@ -1,0 +1,4 @@
+oauth2ServiceFileConfigPath: "D:\\Study\\java\\oauth2-service\\src\\main\\resources\\oauth2-service.yaml"
+dbFileConfigPath: "D:\\Study\\java\\demo02-config\\database-config.yaml"
+redisFileConfigPath: "D:\\Study\\java\\demo02-config\\redis-config.yaml"
+tokenFileConfigPath: "D:\\Study\\java\\oauth2-service\\src\\main\\resources\\token-config.yaml"
