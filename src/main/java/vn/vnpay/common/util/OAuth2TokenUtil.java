@@ -87,9 +87,9 @@ public class OAuth2TokenUtil {
     /**
      * @param accessToken: token need to validate
      * @param secretKey:   key to validate
-     * @return Triple: message(L), result validate(M), code(R)
+     * @return Triple: code(R), message(L), result validate(M)
      */
-    public static Triple<String, Boolean, String> validateAccessToken(String accessToken, String secretKey, String clientId) {
+    public static Triple<String, String, Boolean> validateAccessToken(String accessToken, String secretKey, String clientId) {
         try {
             long timeNow = (new Date()).getTime();
             Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
@@ -97,26 +97,26 @@ public class OAuth2TokenUtil {
             Claims claims = claimsJws.getBody();
             if (!ACCESS_TOKEN.equals(claims.get(TOKEN_TYPE).toString())) {
                 log.info("Token type not access token");
-                return Triple.of(ACCESS_TOKEN_INVALID.getMessage(), false, ACCESS_TOKEN_INVALID.getCode());
+                return Triple.of(ACCESS_TOKEN_INVALID.getCode(), ACCESS_TOKEN_INVALID.getMessage(), false);
             }
             if (claims.getIssuedAt().getTime() > timeNow) {
                 log.info("Issue date not yet");
-                return Triple.of(TOKEN_NOT_YET.getMessage(), false, TOKEN_NOT_YET.getCode());
+                return Triple.of(TOKEN_NOT_YET.getCode(), TOKEN_NOT_YET.getMessage(), false);
             }
             var userDTO = claims.get(clientId, Map.class);
             if (Objects.isNull(userDTO)) {
                 log.info("Token is error");
-                return Triple.of(TOKEN_VALIDATE_ERROR.getMessage(), false, TOKEN_NOT_YET.getCode());
+                return Triple.of(TOKEN_NOT_YET.getCode(), TOKEN_NOT_YET.getMessage(), false);
             }
             log.info("Validate token success for user: {}", userDTO);
-            return Triple.of(SUCCESS.getMessage(), true, SUCCESS.getCode());
+            return Triple.of(SUCCESS.getCode(), SUCCESS.getMessage(), true);
         } catch (Exception e) {
             log.error("[validateAccessToken] Validate is error, Exception: ", e);
             if (e instanceof ExpiredJwtException) {
                 log.info("Token has expired");
-                return Triple.of(TOKEN_EXPIRED.getMessage(), false, TOKEN_EXPIRED.getCode());
+                return Triple.of(TOKEN_EXPIRED.getCode(), TOKEN_EXPIRED.getMessage(), false);
             }
-            return Triple.of(TOKEN_VALIDATE_ERROR.getMessage(), false, TOKEN_VALIDATE_ERROR.getCode());
+            return Triple.of(TOKEN_VALIDATE_ERROR.getCode(), TOKEN_VALIDATE_ERROR.getMessage(), false);
         }
     }
 
@@ -129,7 +129,7 @@ public class OAuth2TokenUtil {
      * @param refreshExpirationTimeIn: time to refreshToken expire
      * @return: Triple: code(L), message(M), OAuthToken(R)
      */
-    public static Triple<String, String, OAuthToken> refreshToken(String clientId, String userId, String secretKey,
+    public static Triple<String, String, OAuthToken> refreshToken(String clientId, Integer userId, String secretKey,
                                                                   String issuer, Long expirationTimeIn, Long refreshExpirationTimeIn) {
         try {
             String refreshToken = TOKEN_CACHE.getRefreshToken(clientId, userId);

@@ -4,9 +4,9 @@ import lombok.Getter;
 
 /**
  * @Author: DucTN
- * Created: 18/08/2023
+ * Created: 23/08/2023
  **/
 @Getter
-public class RefreshTokenRequest extends TokenRequest{
+public class GetUserInfoRequest extends VerifyTokenRequest{
    private Integer userId;
 }

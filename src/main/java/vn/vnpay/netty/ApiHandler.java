@@ -15,7 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import vn.vnpay.common.GsonCommon;
 import vn.vnpay.config.OAuthServiceConfig;
 import vn.vnpay.controller.GenerateTokenController;
-import vn.vnpay.controller.OAuthController;
+import vn.vnpay.controller.Controller;
+import vn.vnpay.controller.GetUserInfoController;
 import vn.vnpay.controller.RefreshTokenController;
 import vn.vnpay.controller.RevokeTokenController;
 import vn.vnpay.controller.VerifyTokenController;
@@ -47,7 +48,7 @@ public class ApiHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     @Override
     protected void channelRead0(ChannelHandlerContext context, FullHttpRequest httpRequest) {
         Response<Object> responseResult = new Response<>();
-        OAuthController controller = null;
+        Controller controller = null;
         try {
             if (!HttpMethod.POST.equals(httpRequest.method())) {
                 log.info("HttpMethod does not match");
@@ -73,6 +74,10 @@ public class ApiHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
             if (serviceConfig.getUris().getRevokeTokenUri().equals(uri)) {
                 log.info("Start api revoke token");
                 controller = RevokeTokenController.getInstance();
+            }
+            if (serviceConfig.getUris().getGetUserInfoUri().equals(uri)) {
+                log.info("Start api get user info");
+                controller = GetUserInfoController.getInstance();
             }
             if (Objects.isNull(controller)) {
                 log.info("Uri dose not match");

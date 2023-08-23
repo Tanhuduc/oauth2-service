@@ -6,9 +6,9 @@ import ch.qos.logback.core.joran.spi.JoranException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
 import vn.vnpay.config.TokenClientConfig;
-import vn.vnpay.netty.request.GenerateTokenRequest;
 import vn.vnpay.netty.request.TokenRequest;
 
+import java.util.Base64;
 import java.util.Objects;
 
 /**
@@ -22,7 +22,7 @@ public class Common {
     }
 
     /**
-     * to config logback use config from file in @param path
+     * to config logback.xml use config from file in @param path
      *
      * @param path: is the absolute path
      */
@@ -43,10 +43,24 @@ public class Common {
             log.info("[invalidSubClient] Invalid client id: {}", request.getClientId());
             return true;
         }
+        if (!request.getClientId().equals(clientConfig.getClientId())) {
+            log.info("[invalidSubClient] Client id is error");
+            return true;
+        }
         if (!request.getClientSecret().equals(clientConfig.getClientSecret())) {
             log.info("[invalidSubClient] Client Secret is error");
             return true;
         }
         return false;
+    }
+
+    public static String decodeBase64(String endCode) {
+        try {
+            byte[] decodeBytes = Base64.getDecoder().decode(endCode);
+            return new String(decodeBytes);
+        } catch (Exception e) {
+            log.error("[decodeBase64] Decode fails with exception: ", e);
+            return null;
+        }
     }
 }

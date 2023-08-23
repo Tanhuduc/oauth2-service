@@ -5,3 +5,4 @@ uris:
   verifyTokenUri: "/oauth2/token/verify"
   refreshTokenUri: "/oauth2/token/refresh"
   revokeTokenUri: "/oauth2/token/revoke"
+  getUserInfoUri: "/oauth2/user/get-info"

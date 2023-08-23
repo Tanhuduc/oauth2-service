@@ -10,14 +10,12 @@ import vn.vnpay.usecase.OAuth2UseCase;
 
 import java.util.Objects;
 
-import static vn.vnpay.netty.Error.Error.CLIENT_INVALID;
-
 /**
  * @Author: DucTN
  * Created: 15/08/2023
  **/
 @Slf4j
-public class VerifyTokenController implements OAuthController {
+public class VerifyTokenController implements Controller {
     private static VerifyTokenController instance;
 
     public static VerifyTokenController getInstance() {
@@ -35,16 +33,11 @@ public class VerifyTokenController implements OAuthController {
         Response<Object> response = new Response<>();
         VerifyTokenRequest request = gson.fromJson(jsonRequest, VerifyTokenRequest.class);
         log.info("Start verify token for clientId: {}", request.getClientId());
-        Triple<String, Boolean, String> result = oAuth2UseCase.verifyToken(request);
-        log.info("Finish verify token");
-        if (Objects.isNull(result)) {
-            response.setCode(CLIENT_INVALID.getCode());
-            response.setCode(CLIENT_INVALID.getMessage());
-            return response;
-        }
-        response.setCode(result.getRight());
-        response.setMessage(result.getLeft());
-        response.setData(result.getMiddle());
+        Triple<String, String, Boolean> result = oAuth2UseCase.verifyToken(request);
+        log.info("Verify token return result with: {}", result.getLeft());
+        response.setCode(result.getLeft());
+        response.setMessage(result.getMiddle());
+        response.setData(result.getRight());
         return response;
     }
 }

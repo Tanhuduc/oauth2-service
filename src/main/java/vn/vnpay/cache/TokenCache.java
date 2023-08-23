@@ -22,19 +22,19 @@ public class TokenCache {
 
     private final JedisPooled jedisPooled = JedisPooledConfig.getInstance().getJedisPooled();
 
-    public void saveRefreshToken(String clientId, String userId, String refreshToken) {
+    public void saveRefreshToken(String clientId, Integer userId, String refreshToken) {
         log.info("Save refresh token, clientId: {}, userId: {}", clientId, userId);
-        jedisPooled.hset(buildKey(clientId), userId, refreshToken);
+        jedisPooled.hset(buildKey(clientId), String.valueOf(userId), refreshToken);
     }
 
-    public String getRefreshToken(String clientId, String userId) {
+    public String getRefreshToken(String clientId, Integer userId) {
         log.info("Get refresh token, clientId: {}, userId: {}", clientId, userId);
-        return jedisPooled.hget(buildKey(clientId), userId);
+        return jedisPooled.hget(buildKey(clientId), String.valueOf(userId));
     }
 
-    public Long deleteRefreshToken(String clientId, String userId) {
+    public Long deleteRefreshToken(String clientId, Integer userId) {
         log.info("Delete refresh token, clientId: {}, userId: {}", clientId, userId);
-        return jedisPooled.hdel(buildKey(clientId), userId);
+        return jedisPooled.hdel(buildKey(clientId), String.valueOf(userId));
     }
 
     private String buildKey(String clientId) {

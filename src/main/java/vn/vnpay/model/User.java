@@ -1,8 +1,12 @@
 package vn.vnpay.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigInteger;
 
 /**
  * @Author: DucTN
@@ -11,9 +15,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
-    private String id;
+    private Integer id;
     private String useName;
-    private int password;
+    private String password;
     private String role;
 }

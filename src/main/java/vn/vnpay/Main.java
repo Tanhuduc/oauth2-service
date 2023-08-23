@@ -1,11 +1,14 @@
 package vn.vnpay;
 
 import lombok.extern.slf4j.Slf4j;
+import vn.vnpay.common.Common;
 import vn.vnpay.common.GsonCommon;
+import vn.vnpay.common.HealthCheck;
 import vn.vnpay.common.ObjectMapperCommon;
 import vn.vnpay.common.YamlCommon;
 import vn.vnpay.config.OAuthServiceConfig;
 import vn.vnpay.config.PathFileConfig;
+import vn.vnpay.cronjob.InitInstanceCronjob;
 import vn.vnpay.netty.NettyService;
 
 import java.io.IOException;
@@ -16,15 +19,18 @@ import java.io.IOException;
  **/
 @Slf4j
 public class Main {
+    private static final String LOG_PATH = "D:\\Study\\java\\oauth2-service\\src\\log\\config\\logback.xml";
     private static final String PATH_FILE_PATH = "D:\\Study\\java\\oauth2-service\\src\\main\\resources\\application.yaml";
 
     public static void main(String[] args) {
         try {
+            Common.configLogback(LOG_PATH);
             init();
-//            if (HealthCheck.health()) {
+            InitInstanceCronjob.start();
+            if (HealthCheck.health()) {
                 NettyService service = NettyService.getInstance();
                 service.start();
-//            }
+            }
         } catch (Exception e) {
             log.error("Start service fails, exception: ", e);
         } catch (Throwable throwable) {

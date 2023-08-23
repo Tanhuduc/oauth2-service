@@ -16,6 +16,9 @@ public enum Error {
    CLIENT_INVALID("400005", "Invalid client match"),
    ACCESS_TOKEN_INVALID("400006", "Invalid access token"),
    REFRESH_TOKEN_INVALID("400007", "Invalid refresh token"),
+   USER_INVALID("400008", "Login fails"),
+   FOUND_USER_INFO_ERROR("400009", "Found user info fails"),
+   NOT_FOUND("404000", "Not found"),
    API_INVALID("404001", "API invalid"),
    UNKNOWN_ERROR("500000", "Unknown error"),
    ;

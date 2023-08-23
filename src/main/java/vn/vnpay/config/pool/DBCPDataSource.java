@@ -1,6 +1,7 @@
 package vn.vnpay.config.pool;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import vn.vnpay.common.Common;
 import vn.vnpay.config.DbConfig;
 
 import java.sql.Connection;
@@ -14,7 +15,7 @@ public class DBCPDataSource {
         BASIC_DATA_SOURCE.setDriverClassName(CONFIG.getDriver());
         BASIC_DATA_SOURCE.setUrl(CONFIG.getConnectionUrl());
         BASIC_DATA_SOURCE.setUsername(CONFIG.getUserName());
-        BASIC_DATA_SOURCE.setPassword(CONFIG.getPassword());
+        BASIC_DATA_SOURCE.setPassword(Common.decodeBase64(CONFIG.getPassword()));
         BASIC_DATA_SOURCE.setMinIdle(CONFIG.getMinConnections()); // minimum number of idle connections in the pool
         BASIC_DATA_SOURCE.setInitialSize(CONFIG.getMinConnections());
         BASIC_DATA_SOURCE.setMaxIdle(CONFIG.getMaxConnections()); // maximum number of idle connections in the pool

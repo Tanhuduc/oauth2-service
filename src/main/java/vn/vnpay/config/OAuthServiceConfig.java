@@ -1,17 +1,11 @@
 package vn.vnpay.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.yaml.snakeyaml.Yaml;
-import vn.vnpay.common.ObjectMapperCommon;
-import vn.vnpay.common.YamlCommon;
+import vn.vnpay.common.util.ReadFileYAMLUtil;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
 import java.util.Objects;
 
 @Getter
@@ -24,9 +18,7 @@ public class OAuthServiceConfig {
     private OAuthServiceConfig() {
     }
 
-    private static final Yaml YAML = YamlCommon.getInstance();
     private static final PathFileConfig PATH_FILE_CONFIG = PathFileConfig.getInstance();
-    private static final ObjectMapper MAPPER = ObjectMapperCommon.getInstance();
     private static OAuthServiceConfig instance;
 
     public static OAuthServiceConfig getInstance() {
@@ -46,21 +38,14 @@ public class OAuthServiceConfig {
     }
 
     public static OAuthServiceConfig initInstance(String path) throws IOException {
-        InputStream inputStream = null;
-        try {
-            if (StringUtils.isBlank(path)) {
-                path = PATH_FILE_CONFIG.getOauth2ServiceFileConfigPath();
-            }
-            inputStream = new FileInputStream(path);
-            Map<String, Object> objectsMap = YAML.load(inputStream);
-            instance = MAPPER.convertValue(objectsMap, OAuthServiceConfig.class);
-            log.info("ServiceConfig is initiated");
-            return instance;
-        } finally {
-            if (!Objects.isNull(inputStream)) {
-                inputStream.close();
-            }
+
+        if (StringUtils.isBlank(path)) {
+            path = PATH_FILE_CONFIG.getOauth2ServiceFileConfigPath();
         }
+        instance = ReadFileYAMLUtil.read(path, OAuthServiceConfig.class);
+        log.info("OAuthServiceConfig is initiated");
+        return instance;
+
     }
 
     @Getter
@@ -69,5 +54,6 @@ public class OAuthServiceConfig {
         private String verifyTokenUri;
         private String refreshTokenUri;
         private String revokeTokenUri;
+        private String getUserInfoUri;
     }
 }

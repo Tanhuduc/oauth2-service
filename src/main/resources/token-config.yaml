@@ -2,7 +2,7 @@ secretKey: "8747BFFC81DC96E4AB52B720666A2F1CABAC3E71B237A93730DF8996D086F229"
 issuer: "localhost:8080/oauth2"
 clients:
   command-client:
-    expireTime: 30000
+    expireTime: 60000
     refreshExpireTime: 300000
     clientId: "command-client"
     clientSecret: "Y29tbWFuZC1zZWNyZXQ="
