@@ -10,6 +10,4 @@ import lombok.Getter;
 public class TokenClientConfig {
     private String clientId;
     private String clientSecret;
-    private Long expireTime;
-    private Long refreshExpireTime;
 }

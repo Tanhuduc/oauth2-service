@@ -1,14 +1,16 @@
 package vn.vnpay.controller;
 
-import com.google.gson.Gson;
+import io.netty.handler.codec.http.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Triple;
-import vn.vnpay.common.GsonCommon;
-import vn.vnpay.netty.request.VerifyTokenRequest;
-import vn.vnpay.netty.response.Response;
-import vn.vnpay.usecase.OAuth2UseCase;
+import vn.vnpay.bean.controller.response.Response;
+import vn.vnpay.service.OAuth2Service;
 
 import java.util.Objects;
+
+import static vn.vnpay.bean.constant.HeaderEntity.AUTHORIZATION;
+import static vn.vnpay.bean.constant.HeaderEntity.CLIENT_ID;
+import static vn.vnpay.bean.constant.HeaderEntity.CLIENT_SECRET;
+import static vn.vnpay.bean.constant.HeaderEntity.USER_ID;
 
 /**
  * @Author: DucTN
@@ -25,19 +27,17 @@ public class VerifyTokenController implements Controller {
         return instance;
     }
 
-    private final OAuth2UseCase oAuth2UseCase = OAuth2UseCase.getInstance();
-    private final Gson gson = GsonCommon.getInstance();
+    private final OAuth2Service oAuth2UseCase = OAuth2Service.getInstance();
 
     @Override
-    public Response<Object> handler(String jsonRequest) {
-        Response<Object> response = new Response<>();
-        VerifyTokenRequest request = gson.fromJson(jsonRequest, VerifyTokenRequest.class);
-        log.info("Start verify token for clientId: {}", request.getClientId());
-        Triple<String, String, Boolean> result = oAuth2UseCase.verifyToken(request);
-        log.info("Verify token return result with: {}", result.getLeft());
-        response.setCode(result.getLeft());
-        response.setMessage(result.getMiddle());
-        response.setData(result.getRight());
+    public Response<Object> handler(String jsonRequest, HttpHeaders headers) {
+        Integer userId = Integer.valueOf(headers.get(USER_ID.getValue()));
+        String clientId = headers.get(CLIENT_ID.getValue());
+        String clientSecret = headers.get(CLIENT_SECRET.getValue());
+        String authorization = headers.get(AUTHORIZATION.getValue());
+        log.info("Start verify token for clientId: {}, userId: {}", clientId, userId);
+        Response<Object> response = oAuth2UseCase.verifyToken(clientId, clientSecret, userId, authorization);
+        log.info("Verify token return result with: {}", response.getMessage());
         return response;
     }
 }

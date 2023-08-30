@@ -1,4 +1,4 @@
-package vn.vnpay.dto;
+package vn.vnpay.bean.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

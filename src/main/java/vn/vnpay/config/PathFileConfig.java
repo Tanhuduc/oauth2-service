@@ -29,17 +29,13 @@ public class PathFileConfig {
     public static PathFileConfig getInstance() {
         if (Objects.isNull(instance)) {
             try {
-                instance = initInstance(DEFAULT_PATH);
+                instance = ReadFileYAMLUtil.read(DEFAULT_PATH, PathFileConfig.class);
             } catch (IOException e) {
                 log.error("Init instance fails, exception: ", e);
                 throw new RuntimeException(e);
             }
         }
         return instance;
-    }
-
-    public static PathFileConfig initInstance() throws IOException {
-        return initInstance(null);
     }
 
     public static PathFileConfig initInstance(String path) throws IOException {

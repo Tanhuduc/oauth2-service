@@ -8,20 +8,22 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import lombok.extern.slf4j.Slf4j;
+import vn.vnpay.bean.constant.ResponseStatus;
+import vn.vnpay.bean.controller.response.Response;
 import vn.vnpay.common.GsonCommon;
 import vn.vnpay.config.OAuthServiceConfig;
-import vn.vnpay.controller.GenerateTokenController;
 import vn.vnpay.controller.Controller;
+import vn.vnpay.controller.GetTokenController;
 import vn.vnpay.controller.GetUserInfoController;
 import vn.vnpay.controller.RefreshTokenController;
 import vn.vnpay.controller.RevokeTokenController;
+import vn.vnpay.controller.UserLoginController;
 import vn.vnpay.controller.VerifyTokenController;
-import vn.vnpay.netty.Error.Error;
-import vn.vnpay.netty.response.Response;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -52,16 +54,20 @@ public class ApiHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
         try {
             if (!HttpMethod.POST.equals(httpRequest.method())) {
                 log.info("HttpMethod does not match");
-                responseResult.setCode(Error.API_INVALID.getCode());
-                responseResult.setMessage(Error.API_INVALID.getMessage());
+                responseResult.setCode(ResponseStatus.API_INVALID.getCode());
+                responseResult.setMessage(ResponseStatus.API_INVALID.getMessage());
                 response(context, responseResult);
                 return;
             }
             String uri = httpRequest.uri();
             String body = httpRequest.content().toString(StandardCharsets.UTF_8);
-            if (serviceConfig.getUris().getGenerateTokenUri().equals(uri)) {
-                log.info("Start api generate token");
-                controller = GenerateTokenController.getInstance();
+            if (serviceConfig.getUris().getLoginUri().equals(uri)) {
+                log.info("Start api login");
+                controller = UserLoginController.getInstance();
+            }
+            if (serviceConfig.getUris().getGetTokenUri().equals(uri)) {
+                log.info("Start api get token");
+                controller = GetTokenController.getInstance();
             }
             if (serviceConfig.getUris().getVerifyTokenUri().equals(uri)) {
                 log.info("Start api verify token");
@@ -81,16 +87,17 @@ public class ApiHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
             }
             if (Objects.isNull(controller)) {
                 log.info("Uri dose not match");
-                responseResult.setCode(Error.API_INVALID.getCode());
-                responseResult.setMessage(Error.API_INVALID.getMessage());
+                responseResult.setCode(ResponseStatus.API_INVALID.getCode());
+                responseResult.setMessage(ResponseStatus.API_INVALID.getMessage());
                 response(context, responseResult);
                 return;
             }
-            responseResult = controller.handler(body);
+            HttpHeaders headers = httpRequest.headers();
+            responseResult = controller.handler(body, headers);
         } catch (Exception e) {
             log.error("Handle api fails with exception: ", e);
-            responseResult.setCode(Error.UNKNOWN_ERROR.getCode());
-            responseResult.setMessage(Error.UNKNOWN_ERROR.getMessage());
+            responseResult.setCode(ResponseStatus.UNKNOWN_ERROR.getCode());
+            responseResult.setMessage(ResponseStatus.UNKNOWN_ERROR.getMessage());
         } finally {
             response(context, responseResult);
             context.close();

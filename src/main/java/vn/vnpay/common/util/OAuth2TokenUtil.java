@@ -1,5 +1,6 @@
 package vn.vnpay.common.util;
 
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -8,23 +9,22 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Triple;
-import vn.vnpay.cache.TokenCache;
+import vn.vnpay.bean.OAuthToken;
+import vn.vnpay.bean.dto.UserDTO;
+import vn.vnpay.bean.entity.Scope;
 import vn.vnpay.common.ObjectMapperCommon;
-import vn.vnpay.dto.UserDTO;
-import vn.vnpay.netty.response.data.OAuthToken;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import static vn.vnpay.netty.Error.Error.ACCESS_TOKEN_INVALID;
-import static vn.vnpay.netty.Error.Error.REFRESH_TOKEN_INVALID;
-import static vn.vnpay.netty.Error.Error.SUCCESS;
-import static vn.vnpay.netty.Error.Error.TOKEN_EXPIRED;
-import static vn.vnpay.netty.Error.Error.TOKEN_NOT_YET;
-import static vn.vnpay.netty.Error.Error.TOKEN_VALIDATE_ERROR;
+import java.util.stream.Collectors;
 
 /**
  * @Author: DucTN
@@ -32,133 +32,149 @@ import static vn.vnpay.netty.Error.Error.TOKEN_VALIDATE_ERROR;
  **/
 @Slf4j
 public class OAuth2TokenUtil {
-    private static final TokenCache TOKEN_CACHE = TokenCache.getINSTANCE();
-    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperCommon.getInstance();
-    private static final String ACCESS_TOKEN = "accessToken";
-    private static final String REFRESH_TOKEN = "refreshToken";
+    private static final ObjectMapper MAPPER = ObjectMapperCommon.getInstance();
     private static final String TOKEN_TYPE = "tokenType";
+    private static final String SIGNATURE = "signature";
+    private static final String HMAC_SHA256 = "HmacSHA256";
+    private static final String PREFIX_TOKEN = "Bearer ";
 
     private OAuth2TokenUtil() {
     }
 
     /**
-     * @param issuer:                  path url of auth-service
-     * @param secretKey:               key to gen token
-     * @param clientId:                id of client request token
-     * @param expirationTimeIn:        time to accessToken expire
-     * @param refreshExpirationTimeIn: time to refreshToken expire
-     * @param userDTO:                 user info
-     * @return: OAuthToken
+     * @param issuer:           path url of auth-service
+     * @param secretKey:        key to gen token
+     * @param tokenType:        type of token
+     * @param expirationTimeIn: time to accessToken expire
+     * @param userDTO:          user info
+     * @return : OAuthToken
      */
     public static OAuthToken generateToken(
-            String issuer, String secretKey, String clientId,
-            Long expirationTimeIn, Long refreshExpirationTimeIn, UserDTO userDTO) {
+            String issuer, String secretKey, String tokenType,
+            Long expirationTimeIn, UserDTO userDTO) {
+        log.info("[generateToken] Start generate token: {}, userName: {}", tokenType, userDTO.getUseName());
         Date issueAt = new Date();
-        Date expirationAt = new Date(issueAt.getTime() + expirationTimeIn);
-        Date refreshExpirationAt = new Date(issueAt.getTime() + refreshExpirationTimeIn);
+        Date expirationAt = new Date(issueAt.getTime() / 1000 * 1000 + expirationTimeIn); //lam tron den don vi la giay
         Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
         try {
-            String accessToken = Jwts.builder()
+            String token = Jwts.builder()
                     .setIssuer(issuer)
-                    .claim(clientId, userDTO)
-                    .claim(TOKEN_TYPE, ACCESS_TOKEN)
+                    .claim(String.valueOf(userDTO.getId()), userDTO)
+                    .claim(TOKEN_TYPE, tokenType)
                     .setIssuedAt(issueAt)
                     .setExpiration(expirationAt)
+                    .claim(SIGNATURE, generateSignature(userDTO, expirationAt.getTime(), secretKey))
                     .signWith(key)
                     .compact();
-            String refreshToken = Jwts.builder()
-                    .setIssuer(issuer)
-                    .claim(clientId, userDTO)
-                    .claim(TOKEN_TYPE, REFRESH_TOKEN)
-                    .setIssuedAt(issueAt)
-                    .setExpiration(refreshExpirationAt)
-                    .signWith(key)
-                    .compact();
+            log.info("[generateToken] Generate token success");
             return OAuthToken.builder()
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
+                    .token(new StringBuilder(PREFIX_TOKEN).append(token).toString())
+                    .expireTime(expirationAt)
                     .build();
         } catch (Exception e) {
+            log.info("[generateToken] Has error");
             log.error("Exception: ", e);
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
-    /**
-     * @param accessToken: token need to validate
-     * @param secretKey:   key to validate
-     * @return Triple: code(R), message(L), result validate(M)
-     */
-    public static Triple<String, String, Boolean> validateAccessToken(String accessToken, String secretKey, String clientId) {
-        try {
-            long timeNow = (new Date()).getTime();
-            Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
-            Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken);
-            Claims claims = claimsJws.getBody();
-            if (!ACCESS_TOKEN.equals(claims.get(TOKEN_TYPE).toString())) {
-                log.info("Token type not access token");
-                return Triple.of(ACCESS_TOKEN_INVALID.getCode(), ACCESS_TOKEN_INVALID.getMessage(), false);
-            }
-            if (claims.getIssuedAt().getTime() > timeNow) {
-                log.info("Issue date not yet");
-                return Triple.of(TOKEN_NOT_YET.getCode(), TOKEN_NOT_YET.getMessage(), false);
-            }
-            var userDTO = claims.get(clientId, Map.class);
-            if (Objects.isNull(userDTO)) {
-                log.info("Token is error");
-                return Triple.of(TOKEN_NOT_YET.getCode(), TOKEN_NOT_YET.getMessage(), false);
-            }
-            log.info("Validate token success for user: {}", userDTO);
-            return Triple.of(SUCCESS.getCode(), SUCCESS.getMessage(), true);
-        } catch (Exception e) {
-            log.error("[validateAccessToken] Validate is error, Exception: ", e);
-            if (e instanceof ExpiredJwtException) {
-                log.info("Token has expired");
-                return Triple.of(TOKEN_EXPIRED.getCode(), TOKEN_EXPIRED.getMessage(), false);
-            }
-            return Triple.of(TOKEN_VALIDATE_ERROR.getCode(), TOKEN_VALIDATE_ERROR.getMessage(), false);
-        }
+    private static String generateSignature(UserDTO userDTO, Long expirationTime, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException {
+        String message = buildMessage(userDTO.getId(), userDTO.getRole(), userDTO.getUseName(), userDTO.getLstScope(), expirationTime);
+        log.info("Message: {}", message);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(), HMAC_SHA256);
+        Mac mac = Mac.getInstance(HMAC_SHA256);
+        mac.init(secretKeySpec);
+        byte[] signatureByes = mac.doFinal(message.getBytes());
+        return Base64.getEncoder().encodeToString(signatureByes);
+    }
+
+    private static String buildMessage(Integer id, String role, String useName, List<Scope> lstScope, Long expirationTime) {
+        return new StringBuilder(SIGNATURE)
+                .append("|").append(id)
+                .append("|").append(role)
+                .append("|").append(useName)
+                .append("|").append(convertToString(lstScope))
+                .append("|").append(expirationTime)
+                .toString();
+    }
+
+    private static String convertToString(List<Scope> lstScope) {
+        return lstScope.stream().map(Scope::getScope).collect(Collectors.joining("|"));
     }
 
     /**
-     * @param clientId:                id of client request token
-     * @param userId:                  user id
-     * @param secretKey:               key to gen token
-     * @param issuer:                  path url of auth-service
-     * @param expirationTimeIn:        time to accessToken expire
-     * @param refreshExpirationTimeIn: time to refreshToken expire
-     * @return: Triple: code(L), message(M), OAuthToken(R)
+     * @param authorization: token need validate
+     * @param clientId:      id of client
+     * @param userId:        id of user
+     * @param secretKey:     key use to validate
+     * @return : result validate
      */
-    public static Triple<String, String, OAuthToken> refreshToken(String clientId, Integer userId, String secretKey,
-                                                                  String issuer, Long expirationTimeIn, Long refreshExpirationTimeIn) {
+    public static boolean invalidateToken(String authorization, String clientId, String userId, String secretKey, String tokenType) {
+        log.info("[invalidateToken] Start validate token type: {}", tokenType);
         try {
-            String refreshToken = TOKEN_CACHE.getRefreshToken(clientId, userId);
-            if (StringUtils.isBlank(refreshToken)) {
-                log.info("Invalid refresh token for userId: {}", userId);
-                return Triple.of(REFRESH_TOKEN_INVALID.getCode(), REFRESH_TOKEN_INVALID.getMessage(), null);
+            if (StringUtils.isBlank(authorization) || !authorization.startsWith(PREFIX_TOKEN)) {
+                log.info("[invalidateToken] Authorization is wrong format");
+                return true;
             }
-            Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
-            Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(refreshToken);
-            Claims claims = claimsJws.getBody();
-            if (!REFRESH_TOKEN.equals(claims.get(TOKEN_TYPE).toString())) {
-                log.info("Token type not refresh token");
-                return Triple.of(REFRESH_TOKEN_INVALID.getCode(), REFRESH_TOKEN_INVALID.getMessage(), null);
+            Claims claims = getClaims(authorization, secretKey);
+            if (!tokenType.equals(claims.get(TOKEN_TYPE).toString())) {
+                log.info("[invalidateToken] Token type not access token");
+                return true;
             }
-            var user = claims.get(clientId, Map.class);
-            if (Objects.isNull(user)) {
-                log.info("Token is error");
-                return Triple.of(REFRESH_TOKEN_INVALID.getCode(), TOKEN_VALIDATE_ERROR.getMessage(), null);
+            Map<String, Object> mUserDTO = claims.get(userId, Map.class);
+            if (Objects.isNull(mUserDTO) || mUserDTO.isEmpty()) {
+                log.info("[invalidateToken] Token is error, not found user info");
+                return true;
             }
-            UserDTO userDTO = OBJECT_MAPPER.convertValue(user, UserDTO.class);
-            OAuthToken oAuthToken = generateToken(issuer, secretKey, clientId, expirationTimeIn, refreshExpirationTimeIn, userDTO);
-            return Triple.of(SUCCESS.getCode(), SUCCESS.getMessage(), oAuthToken);
+            UserDTO userDTO = MAPPER.convertValue(mUserDTO, UserDTO.class);
+            List<String> lstScope = userDTO.getLstScope().stream()
+                    .map(Scope::getScope).toList();
+            if (!lstScope.contains(clientId)) {
+                log.info("[invalidateToken] UserId: {} doesn't have scope in clientId: {}", userId, clientId);
+                return true;
+            }
+            String signature = claims.get(SIGNATURE, String.class);
+            if (StringUtils.isBlank(signature)) {
+                log.info("[invalidateToken] Token is error, not found signature");
+                return true;
+            }
+            return !verifySignature(signature, userDTO, claims.getExpiration().getTime(), secretKey);
         } catch (Exception e) {
-            log.error("[validateAccessToken] Validate is error, Exception: ", e);
+            log.info("[invalidateToken] Has error");
+            log.info("[invalidateToken] Validate {} error", tokenType);
             if (e instanceof ExpiredJwtException) {
-                log.info("Token has expired");
-                return Triple.of(TOKEN_EXPIRED.getCode(), TOKEN_EXPIRED.getMessage(), null);
+                log.error("[invalidateToken] Validate is expired, Exception: ", e);
+                return true;
             }
-            return Triple.of(TOKEN_VALIDATE_ERROR.getCode(), TOKEN_VALIDATE_ERROR.getMessage(), null);
+            log.error("[invalidateToken] Validate is error, Exception: ", e);
+            return true;
         }
     }
+
+    public static Claims getClaims(String authorization, String secretKey) {
+        String token = authorization.substring(PREFIX_TOKEN.length());
+        Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
+        Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+        return claimsJws.getBody();
+    }
+
+    private static boolean verifySignature(String signature, UserDTO userDTO, Long expirationTime, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException {
+        String signatureExpect = generateSignature(userDTO, expirationTime, secretKey);
+        if (!signature.equals(signatureExpect)) {
+            log.info("[verifySignature] Signature is wrong");
+            return false;
+        }
+        log.info("[verifySignature] verify success");
+        return true;
+    }
+
+    public static String generateAuthorizeCode(Integer userId) {
+        log.info("[generateAuthorizeCode] Start generate");
+        String code = new StringBuilder(userId).append("_").append(NanoIdUtils.randomNanoId()).toString();
+        String authorizationCode = Base64.getEncoder().encodeToString(code.getBytes());
+        log.info("[generateAuthorizeCode] Finish generate");
+        return authorizationCode;
+    }
+
+
 }

@@ -32,6 +32,7 @@ public class Main {
                 service.start();
             }
         } catch (Exception e) {
+            log.info("Start service fails because have ex");
             log.error("Start service fails, exception: ", e);
         } catch (Throwable throwable) {
             log.error("Start service fails, throwable: ", throwable);
@@ -50,7 +51,7 @@ public class Main {
     private static void initConfig() throws IOException {
         log.info("Start init config");
         PathFileConfig.initInstance(PATH_FILE_PATH);
-        OAuthServiceConfig.initInstance();
+        OAuthServiceConfig.getInstance();
         log.info("Finish init config");
     }
 }

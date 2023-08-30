@@ -24,7 +24,7 @@ public class ChannelInit extends ChannelInitializer<SocketChannel> {
         ch.pipeline().addLast(new HttpResponseEncoder());
         ch.pipeline().addLast(new HttpRequestDecoder());
         ch.pipeline().addLast(new HttpObjectAggregator(65536));
-//        ch.pipeline().addLast(RequestIdInjectionHandler.getInstance());
+        ch.pipeline().addLast(TokenInjectionHandler.getInstance());
         ch.pipeline().addLast(ApiHandler.getInstance());
     }
 }

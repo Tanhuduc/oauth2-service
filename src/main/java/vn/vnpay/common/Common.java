@@ -5,11 +5,9 @@ import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
-import vn.vnpay.config.TokenClientConfig;
-import vn.vnpay.netty.request.TokenRequest;
 
 import java.util.Base64;
-import java.util.Objects;
+import java.util.Map;
 
 /**
  * @author: DucTN
@@ -38,16 +36,13 @@ public class Common {
         }
     }
 
-    public static boolean invalidSubClient(TokenRequest request, TokenClientConfig clientConfig) {
-        if (Objects.isNull(clientConfig)) {
-            log.info("[invalidSubClient] Invalid client id: {}", request.getClientId());
+    public static boolean invalidSubClient(String clientId, String clientSecret, Map<String, String> clients) {
+        if (!clients.containsKey(clientId)) {
+            log.info("[invalidSubClient] Invalid client id: {}", clientId);
             return true;
         }
-        if (!request.getClientId().equals(clientConfig.getClientId())) {
-            log.info("[invalidSubClient] Client id is error");
-            return true;
-        }
-        if (!request.getClientSecret().equals(clientConfig.getClientSecret())) {
+        String clientSecretExpect = decodeBase64(clients.get(clientId));
+        if (!clientSecretExpect.equals(clientSecret)) {
             log.info("[invalidSubClient] Client Secret is error");
             return true;
         }
@@ -59,8 +54,19 @@ public class Common {
             byte[] decodeBytes = Base64.getDecoder().decode(endCode);
             return new String(decodeBytes);
         } catch (Exception e) {
+            log.info("[decodeBase64] Has error");
             log.error("[decodeBase64] Decode fails with exception: ", e);
-            return null;
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String encodeBase64(String input) {
+        try {
+            return Base64.getEncoder().encodeToString(input.getBytes());
+        } catch (Exception e) {
+            log.info("[encodeBase64] Has error");
+            log.error("[encodeBase64] Encode fails with exception: ", e);
+            throw new RuntimeException(e);
         }
     }
 }

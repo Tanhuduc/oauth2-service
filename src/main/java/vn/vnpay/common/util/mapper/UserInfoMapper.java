@@ -1,8 +1,8 @@
-package vn.vnpay.mapper;
+package vn.vnpay.common.util.mapper;
 
 import lombok.extern.slf4j.Slf4j;
-import vn.vnpay.dto.UserInfoDTO;
-import vn.vnpay.model.UserInfo;
+import vn.vnpay.bean.dto.UserInfoDTO;
+import vn.vnpay.bean.entity.UserInfo;
 
 import java.util.Objects;
 
@@ -12,19 +12,11 @@ import java.util.Objects;
  **/
 @Slf4j
 public class UserInfoMapper {
-    private static UserInfoMapper instance;
-
-    public static UserInfoMapper getInstance() {
-        if (Objects.isNull(instance)) {
-            instance = new UserInfoMapper();
-        }
-        return instance;
-    }
 
     private UserInfoMapper() {
     }
 
-    public UserInfoDTO convertToDTO(UserInfo userInfo) {
+    public static UserInfoDTO convertToDTO(UserInfo userInfo) {
         if (Objects.isNull(userInfo)) {
             log.info("[convertToDTO] User is null");
             return null;

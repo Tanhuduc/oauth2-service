@@ -1,7 +1,9 @@
-package vn.vnpay.netty.response.data;
+package vn.vnpay.bean;
 
 import lombok.Builder;
 import lombok.Getter;
+
+import java.util.Date;
 
 /**
  * @Author: DucTN
@@ -10,6 +12,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class OAuthToken {
-   private String accessToken;
-   private String refreshToken;
+   private String token;
+   private Date expireTime;
 }

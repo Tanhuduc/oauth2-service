@@ -1,12 +1,8 @@
-package vn.vnpay.model;
+package vn.vnpay.bean.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.math.BigInteger;
 
 /**
  * @Author: DucTN
@@ -14,8 +10,6 @@ import java.math.BigInteger;
  **/
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class UserInfo {
     private Integer id;

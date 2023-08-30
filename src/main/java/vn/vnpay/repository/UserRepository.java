@@ -1,12 +1,13 @@
 package vn.vnpay.repository;
 
 import lombok.extern.slf4j.Slf4j;
-import vn.vnpay.model.User;
+import vn.vnpay.bean.entity.User;
+import vn.vnpay.common.util.ClosedUtil;
+import vn.vnpay.config.pool.DBCPDataSource;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Objects;
 
 /**
@@ -27,17 +28,17 @@ public class UserRepository {
     private UserRepository() {
     }
 
-    public User findByUserNameAndPassword(Connection connection, String userName, String password) throws SQLException {
+    public User findByUserName(String userName) {
         log.info("[findByUserNameAndPassword] Start find");
-        String sqlQuery = new StringBuilder("SELECT * FROM Users WHERE 1")
-                .append(" AND UserName = '").append(userName).append("'")
-                .append(" AND Password = '").append(password).append("'")
-                .toString();
-        Statement statement = null;
+        String sqlQuery = new StringBuilder("SELECT * FROM Users WHERE UserName = ?").toString();
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         try {
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery(sqlQuery);
+            connection = DBCPDataSource.getConnection();
+            preparedStatement = connection.prepareStatement(sqlQuery);
+            preparedStatement.setString(1, userName);
+            resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
                 log.info("[findByUserNameAndPassword] Success");
                 return User.builder()
@@ -50,11 +51,11 @@ public class UserRepository {
             log.info("[findByUserId] Not found");
             return null;
         } catch (Exception e) {
-            log.error("[findByUserNameAndPassword] Exception: ", e);
+            log.info("[findByUserName] Has error");
+            log.error("[findByUserName] Exception: ", e);
             return null;
         } finally {
-            Objects.requireNonNull(resultSet).close();
-            Objects.requireNonNull(statement).close();
+            ClosedUtil.close(connection, preparedStatement, resultSet);
         }
     }
 }

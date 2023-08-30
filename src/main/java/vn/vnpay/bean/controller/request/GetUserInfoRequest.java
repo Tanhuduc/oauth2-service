@@ -1,4 +1,4 @@
-package vn.vnpay.netty.request;
+package vn.vnpay.bean.controller.request;
 
 import lombok.Getter;
 
@@ -7,6 +7,6 @@ import lombok.Getter;
  * Created: 23/08/2023
  **/
 @Getter
-public class GetUserInfoRequest extends VerifyTokenRequest{
+public class GetUserInfoRequest{
    private Integer userId;
 }

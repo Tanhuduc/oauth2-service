@@ -1,16 +1,20 @@
 package vn.vnpay.controller;
 
-import com.google.gson.Gson;
+import io.netty.handler.codec.http.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Triple;
-import vn.vnpay.common.GsonCommon;
-import vn.vnpay.dto.UserInfoDTO;
-import vn.vnpay.netty.request.GetUserInfoRequest;
-import vn.vnpay.netty.response.Response;
-import vn.vnpay.usecase.OAuth2UseCase;
-import vn.vnpay.usecase.UserInfoUseCase;
+import vn.vnpay.bean.constant.ResponseStatus;
+import vn.vnpay.bean.controller.response.Response;
+import vn.vnpay.service.OAuth2Service;
+import vn.vnpay.service.UserInfoService;
 
 import java.util.Objects;
+
+import static vn.vnpay.bean.constant.HeaderEntity.AUTHORIZATION;
+import static vn.vnpay.bean.constant.HeaderEntity.CLIENT_ID;
+import static vn.vnpay.bean.constant.HeaderEntity.CLIENT_SECRET;
+import static vn.vnpay.bean.constant.HeaderEntity.USER_ID;
+import static vn.vnpay.bean.constant.ResponseStatus.SUCCESS;
+import static vn.vnpay.bean.constant.TokenType.ACCESS_TOKEN;
 
 /**
  * @Author: DucTN
@@ -18,9 +22,8 @@ import java.util.Objects;
  **/
 @Slf4j
 public class GetUserInfoController implements Controller {
-    private final OAuth2UseCase oAuth2UseCase = OAuth2UseCase.getInstance();
-    private final UserInfoUseCase userInfoUseCase = UserInfoUseCase.getInstance();
-    private final Gson gson = GsonCommon.getInstance();
+    private final OAuth2Service oAuth2Service = OAuth2Service.getInstance();
+    private final UserInfoService userInfoService = UserInfoService.getInstance();
 
     private static GetUserInfoController instance;
 
@@ -35,22 +38,20 @@ public class GetUserInfoController implements Controller {
     }
 
     @Override
-    public Response<Object> handler(String jsonRequest) {
-        GetUserInfoRequest request = gson.fromJson(jsonRequest, GetUserInfoRequest.class);
-        Response<Object> response = new Response<>();
-
-        Triple<String, String, Boolean> resultVerifyToken = oAuth2UseCase.verifyToken(request);
-        if (Boolean.FALSE.equals(resultVerifyToken.getRight())) {
-            log.info("Verify token fails, code: {}, message: {}", resultVerifyToken.getLeft(), resultVerifyToken.getMiddle());
-            response.setCode(resultVerifyToken.getLeft());
-            response.setMessage(resultVerifyToken.getMiddle());
-            return response;
+    public Response<Object> handler(String jsonRequest, HttpHeaders headers) {
+        Integer userId = Integer.valueOf(headers.get(USER_ID.getValue()));
+        String clientId = headers.get(CLIENT_ID.getValue());
+        String clientSecret = headers.get(CLIENT_SECRET.getValue());
+        String authorization = headers.get(AUTHORIZATION.getValue());
+        ResponseStatus status = oAuth2Service.validateToken(clientId, clientSecret, userId, authorization, ACCESS_TOKEN.name());
+        if (!status.equals(SUCCESS)) {
+            return Response.builder()
+                    .code(status.getCode())
+                    .message(status.getMessage())
+                    .build();
         }
-        Triple<String, String, UserInfoDTO> result = userInfoUseCase.getUserInfo(request);
-        log.info("Find user info return result: code: {}, message: {}", resultVerifyToken.getLeft(), resultVerifyToken.getMiddle());
-        response.setCode(result.getLeft());
-        response.setMessage(result.getMiddle());
-        response.setData(result.getRight());
+        Response<Object> response = userInfoService.getUserInfo(userId);
+        log.info("Find user info return result with message: {}", response.getMessage());
         return response;
     }
 }

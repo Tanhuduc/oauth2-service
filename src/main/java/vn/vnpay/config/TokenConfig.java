@@ -2,7 +2,6 @@ package vn.vnpay.config;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import vn.vnpay.common.util.ReadFileYAMLUtil;
 
 import java.io.IOException;
@@ -18,7 +17,9 @@ import java.util.Objects;
 public class TokenConfig {
     private String secretKey;
     private String issuer;
-    private Map<String, TokenClientConfig> clients;
+    private long expireTime;
+    private long refreshExpireTime;
+    private Map<String, String> clients;
 
     private TokenConfig() {
     }
@@ -29,7 +30,7 @@ public class TokenConfig {
     public static TokenConfig getInstance() {
         if (Objects.isNull(instance)) {
             try {
-                instance = initInstance(PATH_FILE_CONFIG.getTokenFileConfigPath());
+                instance = ReadFileYAMLUtil.read(PATH_FILE_CONFIG.getTokenFileConfigPath(), TokenConfig.class);
             } catch (IOException e) {
                 log.error("Init instance fails, exception: ", e);
                 throw new RuntimeException(e);
@@ -43,18 +44,10 @@ public class TokenConfig {
             instance = new TokenConfig();
         }
         TokenConfig tokenConfig = ReadFileYAMLUtil.read(PATH_FILE_CONFIG.getTokenFileConfigPath(), TokenConfig.class);
-        instance.clients = tokenConfig.getClients();
+        instance.expireTime = tokenConfig.getExpireTime();
+        instance.refreshExpireTime = tokenConfig.getRefreshExpireTime();
         instance.issuer = tokenConfig.getIssuer();
         instance.secretKey = tokenConfig.getSecretKey();
-    }
-
-    public static TokenConfig initInstance(String path) throws IOException {
-
-        if (StringUtils.isBlank(path)) {
-            path = PATH_FILE_CONFIG.getTokenFileConfigPath();
-        }
-        instance = ReadFileYAMLUtil.read(path, TokenConfig.class);
-        log.info("TokenFileConfig is initiated");
-        return instance;
+        instance.clients = tokenConfig.getClients();
     }
 }

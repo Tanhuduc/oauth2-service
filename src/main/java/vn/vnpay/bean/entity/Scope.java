@@ -1,4 +1,4 @@
-package vn.vnpay.model;
+package vn.vnpay.bean.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,20 +6,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigInteger;
-
 /**
  * @Author: DucTN
- * Created: 11/08/2023
+ * Created: 28/08/2023
  **/
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class User {
+public class Scope {
     private Integer id;
-    private String useName;
-    private String password;
-    private String role;
+    private String scope;
 }

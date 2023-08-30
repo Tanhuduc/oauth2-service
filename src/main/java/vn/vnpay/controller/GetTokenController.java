@@ -7,7 +7,6 @@ import vn.vnpay.service.OAuth2Service;
 
 import java.util.Objects;
 
-import static vn.vnpay.bean.constant.HeaderEntity.AUTHORIZATION;
 import static vn.vnpay.bean.constant.HeaderEntity.AUTHORIZATION_CODE;
 import static vn.vnpay.bean.constant.HeaderEntity.CLIENT_ID;
 import static vn.vnpay.bean.constant.HeaderEntity.CLIENT_SECRET;
@@ -16,33 +15,31 @@ import static vn.vnpay.bean.constant.HeaderEntity.USER_ID;
 
 /**
  * @Author: DucTN
- * Created: 18/08/2023
+ * Created: 29/08/2023
  **/
 @Slf4j
-public class RefreshTokenController implements Controller {
-    private static RefreshTokenController instance;
+public class GetTokenController implements Controller {
+    private final OAuth2Service oAuth2UseCase = OAuth2Service.getInstance();
 
-    public static RefreshTokenController getInstance() {
+    private static GetTokenController instance;
+
+    public static GetTokenController getInstance() {
         if (Objects.isNull(instance)) {
-            instance = new RefreshTokenController();
+            instance = new GetTokenController();
         }
         return instance;
     }
 
-    private final OAuth2Service oAuth2UseCase = OAuth2Service.getInstance();
-
     @Override
     public Response<Object> handler(String jsonRequest, HttpHeaders headers) {
-        String authorizationCode = headers.get(AUTHORIZATION_CODE.getValue());
         Integer userId = Integer.valueOf(headers.get(USER_ID.getValue()));
         String clientId = headers.get(CLIENT_ID.getValue());
         String clientSecret = headers.get(CLIENT_SECRET.getValue());
         String userAgent = headers.get(USER_AGENT.getValue());
-        String authorization = headers.get(AUTHORIZATION.getValue());
-        log.info("Start refresh token for userId: {}, clientId: {}", userId, clientId);
-        Response<Object> response = oAuth2UseCase.refreshToken(clientId, clientSecret, userAgent
-                , authorizationCode, authorization, userId);
-        log.info("Finish refresh token with message: {}", response.getMessage());
+        String authorizationCode = headers.get(AUTHORIZATION_CODE.getValue());
+        log.info("Start get token for userId: {}, clientId: {}", userId, clientId);
+        Response<Object> response = oAuth2UseCase.getToken(clientId, clientSecret, userAgent, authorizationCode, userId);
+        log.info("Finish get token with message: {}", response.getMessage());
         return response;
     }
 }
