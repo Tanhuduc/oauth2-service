@@ -142,7 +142,7 @@ public class OAuth2Service {
             UserDTO userDTO = UserMapper.convertToDTO(user);
             userDTO.setLstScope(scopeRepository.findScopeByUserId(user.getId()));
             LoginSession loginSession = buildLoginSession(userDTO, userAgent);
-            tokenCache.saveLoginSession(user.getId(), authorizationCode, loginSession);
+            tokenCache.saveLoginSession(user.getId(), authorizationCode, loginSession, tokenConfig.getRefreshExpireTime());
             return Response.builder()
                     .code(SUCCESS.getCode())
                     .message(SUCCESS.getMessage())
@@ -269,7 +269,7 @@ public class OAuth2Service {
             }
             UserDTO userDTO = mapper.convertValue(mUserDTO, UserDTO.class);
             LoginSession loginSession = buildLoginSession(userDTO, userAgent);
-            tokenCache.saveLoginSession(userDTO.getId(), authorizationCode, loginSession);
+            tokenCache.saveLoginSession(userDTO.getId(), authorizationCode, loginSession, tokenConfig.getRefreshExpireTime());
             return Response.builder()
                     .code(SUCCESS.getCode())
                     .message(SUCCESS.getMessage())

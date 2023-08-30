@@ -27,9 +27,11 @@ public class TokenCache {
 
     private final JedisPooled jedisPooled = JedisPooledConfig.getInstance().getJedisPooled();
 
-    public void saveLoginSession(Integer userId, String authorizationCode, LoginSession loginSession) {
+    public void saveLoginSession(Integer userId, String authorizationCode, LoginSession loginSession, Long sessionExpireTime) {
         log.info("Save login session, userId: {}", userId);
-        jedisPooled.hset(buildKey(LOGIN_SESSION_PREFIX, String.valueOf(userId)), authorizationCode, gson.toJson(loginSession));
+        String key = buildKey(LOGIN_SESSION_PREFIX, String.valueOf(userId));
+        jedisPooled.hset(key, authorizationCode, gson.toJson(loginSession));
+        jedisPooled.pexpire(key, sessionExpireTime);
     }
 
     public String getLoginSession(Integer userId, String authorizationCode) {
