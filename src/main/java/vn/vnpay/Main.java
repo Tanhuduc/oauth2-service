@@ -32,10 +32,11 @@ public class Main {
                 service.start();
             }
         } catch (Exception e) {
-            log.info("Start service fails because have ex");
-            log.error("Start service fails, exception: ", e);
+            log.info("[main] Has error");
+            log.error("[main] Start service fails, exception: ", e);
         } catch (Throwable throwable) {
-            log.error("Start service fails, throwable: ", throwable);
+            log.info("[main] Has error");
+            log.error("[main] Start service fails, throwable: ", throwable);
         }
     }
 

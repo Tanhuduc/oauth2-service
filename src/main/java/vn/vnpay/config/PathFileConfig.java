@@ -31,7 +31,8 @@ public class PathFileConfig {
             try {
                 instance = ReadFileYAMLUtil.read(DEFAULT_PATH, PathFileConfig.class);
             } catch (IOException e) {
-                log.error("Init instance fails, exception: ", e);
+                log.info("[getInstance] Has error");
+                log.error("[getInstance]Init instance fails, exception: ", e);
                 throw new RuntimeException(e);
             }
         }

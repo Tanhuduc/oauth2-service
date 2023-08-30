@@ -73,7 +73,7 @@ public class OAuth2TokenUtil {
                     .build();
         } catch (Exception e) {
             log.info("[generateToken] Has error");
-            log.error("Exception: ", e);
+            log.error("[generateToken] Exception: ", e);
             throw new RuntimeException(e);
         }
     }

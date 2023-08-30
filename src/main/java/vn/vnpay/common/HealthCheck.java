@@ -25,14 +25,15 @@ public class HealthCheck {
         try {
             connection = DBCPDataSource.getConnection();
             if (Objects.isNull(connection)) {
-                log.info("DB connection is failed!");
+                log.info("[healthCheckDB] DB connection is failed!");
                 return false;
             }
-            log.info("DB connection is healthy!");
+            log.info("[healthCheckDB] DB connection is healthy!");
             connection.close();
             return true;
         } catch (Exception e) {
-            log.error("Error when checking DB connection, exception: ", e);
+            log.info("[healthCheckDB] Has error");
+            log.error("[healthCheckDB] Error when checking DB connection, exception: ", e);
             return false;
         }
     }
@@ -42,13 +43,14 @@ public class HealthCheck {
         try {
             boolean result = jedisPooled.getPool().getResource().ping();
             if(!result) {
-                log.info("Redis connection is not healthy");
+                log.info("[healthCheckRedis] Redis connection is not healthy");
                 return false;
             }
-            log.info("Redis connection is healthy!");
+            log.info("[healthCheckRedis] Redis connection is healthy!");
             return true;
         } catch (Exception e) {
-            log.error("Error when checking redis connection, exception: ", e);
+            log.info("[healthCheckRedis] Has error");
+            log.error("[healthCheckRedis] Error when checking redis connection, exception: ", e);
             return false;
         }
     }

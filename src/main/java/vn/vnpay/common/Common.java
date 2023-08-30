@@ -32,6 +32,7 @@ public class Common {
         try {
             configurator.doConfigure(path);
         } catch (JoranException e) {
+            log.info("[configLogback] Has error");
             log.error("[configLogback] Config log fails, exception: ", e);
         }
     }
