@@ -2,16 +2,15 @@ package vn.vnpay.config;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import vn.vnpay.common.util.ReadFileYAMLUtil;
+import vn.vnpay.core.common.util.ReadFileYAMLUtil;
+import vn.vnpay.core.config.NettyServiceConfig;
 
 import java.io.IOException;
 import java.util.Objects;
 
 @Getter
 @Slf4j
-public class OAuthServiceConfig {
-    private int port;
-    private String host;
+public class OAuthServiceConfig extends NettyServiceConfig {
     private Uris uris;
 
     private OAuthServiceConfig() {

@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.JedisPooled;
 import vn.vnpay.bean.LoginSession;
-import vn.vnpay.common.GsonCommon;
 import vn.vnpay.config.pool.JedisPooledConfig;
+import vn.vnpay.core.common.GsonCommon;
 
 /**
  * @Author: DucTN

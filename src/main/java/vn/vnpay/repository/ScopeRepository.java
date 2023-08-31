@@ -2,8 +2,8 @@ package vn.vnpay.repository;
 
 import lombok.extern.slf4j.Slf4j;
 import vn.vnpay.bean.entity.Scope;
-import vn.vnpay.common.util.ClosedUtil;
 import vn.vnpay.config.pool.DBCPDataSource;
+import vn.vnpay.core.common.util.ClosedUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

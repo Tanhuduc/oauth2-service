@@ -3,7 +3,8 @@ package vn.vnpay.controller;
 import io.netty.handler.codec.http.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
 import vn.vnpay.bean.constant.ResponseStatus;
-import vn.vnpay.bean.controller.response.Response;
+import vn.vnpay.core.bean.controller.response.Response;
+import vn.vnpay.core.controller.Controller;
 import vn.vnpay.service.OAuth2Service;
 import vn.vnpay.service.UserInfoService;
 

@@ -4,8 +4,9 @@ import com.google.gson.Gson;
 import io.netty.handler.codec.http.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
 import vn.vnpay.bean.controller.request.RevokeTokenRequest;
-import vn.vnpay.bean.controller.response.Response;
-import vn.vnpay.common.GsonCommon;
+import vn.vnpay.core.bean.controller.response.Response;
+import vn.vnpay.core.common.GsonCommon;
+import vn.vnpay.core.controller.Controller;
 import vn.vnpay.service.OAuth2Service;
 
 import java.util.Objects;

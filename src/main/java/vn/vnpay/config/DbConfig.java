@@ -2,7 +2,7 @@ package vn.vnpay.config;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import vn.vnpay.common.util.ReadFileYAMLUtil;
+import vn.vnpay.core.common.util.ReadFileYAMLUtil;
 
 import java.io.IOException;
 import java.util.Objects;

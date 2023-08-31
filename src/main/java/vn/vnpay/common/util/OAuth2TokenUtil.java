@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import vn.vnpay.bean.OAuthToken;
 import vn.vnpay.bean.dto.UserDTO;
 import vn.vnpay.bean.entity.Scope;
-import vn.vnpay.common.ObjectMapperCommon;
+import vn.vnpay.core.common.ObjectMapperCommon;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
